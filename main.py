@@ -3,6 +3,7 @@ from database_manager import create_table
 import logging
 from compare import compare_hashes
 from config import DISTANCE_THRESHOLD
+from config import DIR_TO_PROCESS
 
 # Configurazione del logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -11,10 +12,10 @@ def main():
     """Funzione principale per creare la tabella nel database e processare i video in una directory specificata."""
     try:
         create_table()  # Crea la tabella nel database se non esiste già
-        directory_to_process = "D:/Download/Test"  # Sostituisci con il percorso della tua cartella
+        
 
-        logging.info(f"Inizio dell'elaborazione dei video nella directory: {directory_to_process}")
-        process_videos_in_directory(directory_to_process)
+        logging.info(f"Inizio dell'elaborazione dei video nella directory: {DIR_TO_PROCESS}")
+        process_videos_in_directory(DIR_TO_PROCESS)
         logging.info("Elaborazione completata.")
 
         # Confronta gli hash dei video
