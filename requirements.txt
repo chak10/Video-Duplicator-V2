@@ -1,0 +1,4 @@
+numpy
+imagehash
+tqdm
+Pillow
