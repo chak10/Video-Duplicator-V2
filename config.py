@@ -1,5 +1,5 @@
 # config.py
-
+DIR_TO_PROCESS = "D:\\Download\\Test"  # Sostituisci con il percorso della tua cartella
 # Percorsi per ffmpeg e ffprobe
 FFMPEG_PATH = "ffmpeg.exe"  # Sostituisci con il percorso completo se necessario
 FFPROBE_PATH = "ffprobe.exe"  # Sostituisci con il percorso completo se necessario
