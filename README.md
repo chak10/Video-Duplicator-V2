@@ -13,7 +13,7 @@ VideoDuplicatorV2 is a Python-based application designed to detect and manage du
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.10+
 - Libraries: Listed in `requirements.txt`
 
 ## Installation
