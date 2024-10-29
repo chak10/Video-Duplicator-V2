@@ -22,6 +22,7 @@ VideoDuplicatorV2 is a Python-based application designed to detect and manage du
    ```bash
    git clone https://github.com/Chak10/VideoDuplicatorV2.git
    cd VideoDuplicatorV2
+   pip install -r requirements.txt
 
 ## Usage
 1. Modify the config File
