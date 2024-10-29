@@ -27,7 +27,7 @@ VideoDuplicatorV2 is a Python-based application designed to detect and manage du
 1. Modify the config File
    ```py
    # config.py
-   DIR_TO_PROCESS = "F:\\FRA-PR"  # Sostituisci con il percorso della tua cartella
+   DIR_TO_PROCESS = "video_path"  # Sostituisci con il percorso della tua cartella
    # Percorsi per ffmpeg e ffprobe
    FFMPEG_PATH = "ffmpeg.exe"  # Sostituisci con il percorso completo se necessario
    FFPROBE_PATH = "ffprobe.exe"  # Sostituisci con il percorso completo se necessario
