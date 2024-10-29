@@ -40,7 +40,7 @@ VideoDuplicatorV2 is a Python-based application designed to detect and manage du
 
 2. Start main function
    ```bash
-   py main.py
-3. Wait the end of the main function and start video_gui
+   python main.py
+3. Wait for the main function to finish and then start the video GUI:
    ```bash
-   py video_similarity_gui.py
+   python video_similarity_gui.py
