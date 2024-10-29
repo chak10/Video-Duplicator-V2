@@ -4,9 +4,12 @@ import imagehash
 import logging
 import io
 import time
+import cv2
+import shutil
 from PIL import Image
 from pathlib import Path
 from tqdm import tqdm
+
 from config import FFMPEG_PATH, FFPROBE_PATH, FRAMES_DIR
 from database_manager import insert_video, video_exists_in_db
 from concurrent.futures import ThreadPoolExecutor
@@ -40,39 +43,69 @@ def get_video_resolution(video_path: Path) -> str:
         logging.error(f"Errore nel recuperare la risoluzione del video {video_path}: {e}")
         return "N/A"
 
-def extract_frame(video_path: Path, timestamp: float, output_frame_path: Path) -> imagehash.ImageHash:
-    """Estrae un frame dal video a un dato timestamp e calcola l'hash senza caricarlo in memoria."""
-    command = [
-        FFMPEG_PATH, 
-        '-ss', str(timestamp), 
-        '-i', str(video_path), 
-        '-vframes', '1', 
-        '-f', 'image2pipe', 
-        '-vcodec', 'png', 
-        '-y', 'pipe:1'
-    ]
+def move_video_to_problematic(video_path: Path) -> None:
+    """Sposta il video in una cartella 'problematic' se si verifica un errore."""
+    problem_dir = video_path.parent / "problematic"
+    problem_dir.mkdir(exist_ok=True)  # Crea una singola cartella "problematic" se non esiste già
+    moved_video_path = problem_dir / video_path.name
 
+    if not moved_video_path.exists():
+        shutil.move(str(video_path), moved_video_path)
+        logging.info(f"Video spostato in problematico: {moved_video_path}")
+
+def attempt_frame_extraction(video_path: Path, timestamp: float, output_frame_path: Path) -> imagehash.ImageHash:
+    """Tenta di estrarre un frame usando ffmpeg o OpenCV e calcola l'hash."""
     try:
-        with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL) as proc:
-            image_data = proc.stdout.read()
+        # Prova con ffmpeg
+        command = [
+            FFMPEG_PATH, '-ss', str(timestamp), '-i', str(video_path),
+            '-vframes', '1', '-f', 'image2pipe', '-vcodec', 'png', '-y', 'pipe:1'
+        ]
+        with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
+            image_data, err = proc.communicate()
+            if proc.returncode == 0:
+                pil_image = Image.open(io.BytesIO(image_data))
+                pil_image.save(output_frame_path)
+                return imagehash.phash(pil_image)
 
-        pil_image = Image.open(io.BytesIO(image_data))  # Apri l'immagine da byte
-        phash = imagehash.phash(pil_image)  # Calcola l'hash
+            # Log dell'errore di ffmpeg
+            logging.warning(f"ffmpeg ha restituito un errore: {err.decode().strip()}")
 
-        # Salva l'immagine nel file di output
-        with open(output_frame_path, "wb") as f:
-            f.write(image_data)
+        # Se ffmpeg fallisce, prova con OpenCV
+        cap = cv2.VideoCapture(str(video_path))
+        cap.set(cv2.CAP_PROP_POS_MSEC, timestamp * 1000)
+        success, frame = cap.read()
+        cap.release()
 
-        return phash  # Restituisci l'hash calcolato
+        if success:
+            pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            pil_image.save(output_frame_path)
+            return imagehash.phash(pil_image)
+        logging.error(f"OpenCV ha fallito per il video {video_path}")
 
-    except subprocess.CalledProcessError as e:
-        logging.error(f"Errore nell'estrarre il frame {output_frame_path}: {e}")
-        return None
+    except Exception as e:
+        logging.error(f"Errore durante l'estrazione del frame: {e}")
+
+    return None
+
+def extract_frame(video_path: Path, timestamp: float, output_frame_path: Path) -> imagehash.ImageHash:
+    """Prova l'estrazione di frame e gestisce errori spostando video problematici."""
+    phash = attempt_frame_extraction(video_path, timestamp, output_frame_path)
+    if phash is not None:
+        return phash
+
+    # Se fallisce, logga il video problematico e sposta il video
+    logging.error(f"Errore irreversibile: impossibile estrarre frame da {video_path}")
+    move_video_to_problematic(video_path)
+
+    with open("error_videos.log", "a") as log_file:
+        log_file.write(f"{video_path}\n")
+    
+    return None
 
 def extract_video_info(video_path: Path) -> bool:
     """Estrae informazioni dal video e le inserisce nel database."""
     if video_exists_in_db(str(video_path)):
-        logging.info(f"Video già presente nel database: {video_path}")
         return False
 
     resolution = get_video_resolution(video_path)
@@ -92,10 +125,19 @@ def extract_video_info(video_path: Path) -> bool:
 
     for idx, timestamp in enumerate(timestamps):
         output_frame_path = frames_folder / f"frame_{idx + 1}.jpg"
-        frame_hash = extract_frame(video_path, timestamp, output_frame_path)
-        if frame_hash is not None:
+        
+        # Controlla se il frame esiste già
+        if output_frame_path.exists():
+            # Se esiste, calcola l'hash dal file esistente
+            pil_image = Image.open(output_frame_path)
+            frame_hash = imagehash.phash(pil_image)
             frame_hashes.append(frame_hash)
             frame_paths.append(str(output_frame_path))
+        else:
+            frame_hash = extract_frame(video_path, timestamp, output_frame_path)
+            if frame_hash is not None:
+                frame_hashes.append(frame_hash)
+                frame_paths.append(str(output_frame_path))
 
     # Controlla se ci sono hash non validi
     if len(frame_hashes) < 3:
@@ -104,7 +146,6 @@ def extract_video_info(video_path: Path) -> bool:
 
     combined_hash = combine_hashes_mode(*frame_hashes)  # Combina gli hash
     insert_video(resolution, size, duration, str(video_path), str(combined_hash), *frame_paths)  # Passa anche i percorsi dei frame
-    logging.info(f"Informazioni del video inserite nel database: {video_path}")
 
     return True
 
@@ -121,11 +162,9 @@ def process_video(video_path: Path) -> None:
     # Controlla se i frame esistono già
     frames_folder = Path(FRAMES_DIR) / sanitized_video_name
     if frames_folder.exists() and any(frames_folder.glob("*.jpg")):
-        logging.info(f"I frame esistono già per il video: {video_path}. Procedendo con l'inserimento nel database.")
         extract_video_info(video_path)  # Inserisci le informazioni del video
     else:
         # Se non ci sono frame esistenti, procedi all'estrazione
-        logging.info(f"Elaborazione del video: {video_path}")
         extract_video_info(video_path)
 
 def process_videos_in_directory(directory: str) -> None:
@@ -151,22 +190,17 @@ def process_videos_in_directory(directory: str) -> None:
                     futures.append(executor.submit(process_video, video_path))
 
             for processed_files, future in enumerate(futures, start=1):
-                future.result()  # Attendi il completamento del task
+                try:
+                    future.result()
+                except Exception as e:
+                    logging.error(f"Errore nel processare il video {video_path}: {e}")
 
-                # Calcola il numero di file rimanenti
-                remaining_files = total_files - processed_files
-                estimated_time_per_video = (time.time() - start_time) / processed_files if processed_files > 0 else 0
-                time_remaining = remaining_files * estimated_time_per_video
-                elapsed_time = time.time() - start_time  # Tempo trascorso
-                #time_remaining_hum = format_duration(time_remaining)
-                #elapsed_time_hum = format_duration(elapsed_time)
-                # Aggiorna la barra di stato
+                # Calcola il tempo rimanente e il tempo totale trascorso
+                #elapsed_time = time.time() - start_time
+                #time_remaining = (total_files - processed_files) * (elapsed_time / processed_files) if processed_files > 0 else 0
+                #elapsed_time_str = format_duration(elapsed_time)
+                #logging.info(f"File processati: {processed_files}/{total_files}, Tempo rimanente stimato: {format_duration(time_remaining)}, Tempo trascorso: {elapsed_time_str}")
+
                 pbar.update(1)
-                pbar.set_postfix({
-                    'File elaborati': processed_files,
-                    'File rimanenti': remaining_files,
-                    'Tempo stimato rimanente': time_remaining,
-                    'Tempo trascorso': elapsed_time
-                })
 
-    print()  # Stampa una nuova riga dopo il completamento
+    logging.info("Elaborazione video completata.")
