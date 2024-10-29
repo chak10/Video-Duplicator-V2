@@ -2,4 +2,3 @@ numpy
 imagehash
 tqdm
 Pillow
-tkinter
