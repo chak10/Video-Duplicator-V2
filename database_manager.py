@@ -1,5 +1,24 @@
 import sqlite3
-from config import DB_FILE  # Importa il nome del database da config.py
+import os
+import configparser
+from pathlib import Path
+
+# Load configuration
+config = configparser.ConfigParser()
+
+# Check if the config file exists
+config_file = Path('config.ini')
+if not config_file.exists():
+    raise FileNotFoundError(f"Il file di configurazione 'config.ini' non è stato trovato.")
+
+config.read(config_file)
+
+# Load database file path
+DB_FILE = config['Database']['DB_FILE']
+
+# Print the loaded DB file path for verification
+print(f"DB_FILE: {DB_FILE}")
+
 
 def connect_db():
     """Crea una connessione al database SQLite."""

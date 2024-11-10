@@ -1,7 +1,6 @@
 import json
 import logging
 from database_manager import fetch_videos
-from config import DISTANCE_THRESHOLD
 from utils import format_size, format_duration
 from hash_utils import hamming_distance
 from tqdm import tqdm

@@ -6,16 +6,42 @@ import io
 import time
 import cv2
 import shutil
+import configparser
+
 from PIL import Image
 from pathlib import Path
 from tqdm import tqdm
 
-from config import FFMPEG_PATH, FFPROBE_PATH, FRAMES_DIR
 from database_manager import insert_video, video_exists_in_db
 from concurrent.futures import ThreadPoolExecutor
 from hash_utils import combine_hashes_mode  # Importa la funzione per combinare gli hash
-from utils import format_duration
+from pathlib import Path
 
+# Load configuration
+config = configparser.ConfigParser()
+
+# Check if the config file exists
+config_file = Path('config.ini')
+if not config_file.exists():
+    raise FileNotFoundError(f"Il file di configurazione 'config.ini' non è stato trovato.")
+
+config.read(config_file)
+
+# Load paths
+FFMPEG_PATH = config['Paths']['FFMPEG_PATH']
+FFPROBE_PATH = config['Paths']['FFPROBE_PATH']
+FRAMES_DIR = config['Paths']['FRAMES_DIR']
+
+# Print the loaded paths for verification
+print(f"FFMPEG_PATH: {FFMPEG_PATH}")
+print(f"FFPROBE_PATH: {FFPROBE_PATH}")
+print(f"FRAMES_DIR: {FRAMES_DIR}")
+
+# Check if the paths exist
+for path in [FFMPEG_PATH, FFPROBE_PATH, FRAMES_DIR]:
+    if not Path(path).exists():
+        print(f"Attenzione: Il percorso '{path}' non esiste.")
+        
 # Configurazione del logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filename="video_processing.log")
 

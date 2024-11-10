@@ -65,8 +65,8 @@ class VideoComparerApp(tk.Tk):
         hamming_distance = similarity["hamming_distance"]
         
         # Mostra il nome dei video come titolo
-        video1_name = os.path.basename(video1_info['video_path'])  # Estrae il nome del file dal percorso
-        video2_name = os.path.basename(video2_info['video_path'])  # Estrae il nome del file dal percorso
+        video1_name = video1_info['video_path']  # Estrae il nome del file dal percorso
+        video2_name = video2_info['video_path']  # Estrae il nome del file dal percorso
 
         # Frame per i video e le informazioni in due colonne
         self.display_video_column(video1_info, 0, video1_name)  # Passa il nome del video 1
