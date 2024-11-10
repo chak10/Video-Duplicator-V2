@@ -82,6 +82,3 @@ We welcome contributions! Please fork the repository and submit a pull request.
 
 This project is licensed under the GPL-3.0 license - see the LICENSE file for details.
 
----
-
-Se desideri ulteriori modifiche o approfondimenti, fammi sapere!
