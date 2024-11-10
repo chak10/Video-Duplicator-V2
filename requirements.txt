@@ -1,4 +1,14 @@
-numpy
-imagehash
-tqdm
-Pillow
+# Core Libraries
+numpy==1.24.3               # Per operazioni numeriche e manipolazione di dati
+opencv-python==4.5.5.64     # Per il trattamento e l'elaborazione delle immagini e dei video
+scikit-image==0.19.3        # Per operazioni avanzate di elaborazione delle immagini
+
+# Hashing and Similarity
+imagehash==4.3.1            # Per il calcolo degli hash delle immagini
+pillow==9.1.0               # Dipendenza per imagehash e gestione immagini
+
+# File and System Utilities
+configparser==5.2.0         # Per la gestione dei file di configurazione config.ini
+
+# Progress Tracking
+tqdm==4.64.0                # Per mostrare la barra di progresso nel terminale
