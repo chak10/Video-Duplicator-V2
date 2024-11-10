@@ -1,7 +1,3 @@
-Grazie per l'aggiornamento! Ecco il README aggiornato con **config.ini** al posto di **config.py**:
-
----
-
 # Video Duplicator V2
 
 **Video Duplicator V2** is a powerful tool designed for identifying and managing duplicate video files on your system. Leveraging advanced hashing algorithms, the application extracts frame-level information to accurately detect identical or nearly identical videos, saving storage and ensuring an organized video library.
