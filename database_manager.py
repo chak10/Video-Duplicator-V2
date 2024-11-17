@@ -1,5 +1,5 @@
 import sqlite3
-import os
+import hashlib
 import configparser
 from pathlib import Path
 
@@ -13,10 +13,20 @@ if not config_file.exists():
 
 config.read(config_file)
 
-# Load database file path
-DB_FILE = config['Database']['DB_FILE']
+# Load directory to process
+try:
+    DIR_TO_PROCESS = config['Paths']['DIR_TO_PROCESS']
+except KeyError:
+    raise KeyError("La configurazione 'DIR_TO_PROCESS' non è stata trovata nel file 'config.ini'.")
 
-# Print the loaded DB file path for verification
+# Calcola il nome del file del database usando un hash Blake2b a 128 bit, se non è definito nel file di configurazione
+DB_FILE = config['Database'].get('DB_FILE', None)
+if not DB_FILE:
+    # Calcola hash Blake2b con output di 128 bit per creare il nome del DB
+    DB_FILE = hashlib.blake2b(DIR_TO_PROCESS.encode(), digest_size=16).hexdigest() + '.db'
+
+# Converte il nome del file del database in un percorso assoluto e stampa
+DB_FILE = str(Path(DB_FILE).resolve())
 print(f"DB_FILE: {DB_FILE}")
 
 
