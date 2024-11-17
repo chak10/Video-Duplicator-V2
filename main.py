@@ -3,7 +3,6 @@ from database_manager import create_table
 import logging
 from compare import compare_hashes
 import configparser
-
 from pathlib import Path
 
 # Load configuration

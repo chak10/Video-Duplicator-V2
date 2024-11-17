@@ -25,9 +25,17 @@ if not DB_FILE:
     # Calcola hash Blake2b con output di 128 bit per creare il nome del DB
     DB_FILE = hashlib.blake2b(DIR_TO_PROCESS.encode(), digest_size=16).hexdigest() + '.db'
 
+# Crea la directory per il database se non esiste
+db_path = Path("database")
+db_path.mkdir(parents=True, exist_ok=True)
+
+# Costruisci il percorso completo del file del database
+DB_FILE_PATH = db_path / DB_FILE
+
 # Converte il nome del file del database in un percorso assoluto e stampa
-DB_FILE = str(Path(DB_FILE).resolve())
+DB_FILE = str(Path(DB_FILE_PATH).resolve())
 print(f"DB_FILE: {DB_FILE}")
+
 
 
 def connect_db():

@@ -4,6 +4,43 @@ from database_manager import fetch_videos
 from utils import format_size, format_duration
 from hash_utils import hamming_distance
 from tqdm import tqdm
+import hashlib
+import configparser
+from pathlib import Path
+
+# Load configuration
+config = configparser.ConfigParser()
+
+# Check if the config file exists
+config_file = Path('config.ini')
+if not config_file.exists():
+    raise FileNotFoundError(f"Il file di configurazione 'config.ini' non è stato trovato.")
+
+config.read(config_file)
+
+# Load directory to process
+try:
+    DIR_TO_PROCESS = config['Paths']['DIR_TO_PROCESS']
+except KeyError:
+    raise KeyError("La configurazione 'DIR_TO_PROCESS' non è stata trovata nel file 'config.ini'.")
+
+# Calcola il nome del file del database usando un hash Blake2b a 128 bit, se non è definito nel file di configurazione
+DB_FILE = config['Database'].get('DB_FILE', None)
+JSON_FILE = "similarities.json"
+if not DB_FILE:
+    # Calcola hash Blake2b con output di 128 bit per creare il nome del DB
+    JSON_FILE = hashlib.blake2b(DIR_TO_PROCESS.encode(), digest_size=16).hexdigest() + '.json'
+
+# Crea la directory per il database se non esiste
+db_path = Path("database")
+db_path.mkdir(parents=True, exist_ok=True)
+
+# Costruisci il percorso completo del file del database
+
+JSON_FILE = db_path / JSON_FILE
+# Converte il nome del file del database in un percorso assoluto e stampa
+JSON_FILE = str(Path(JSON_FILE).resolve())
+print(f"JSON_FILE: {JSON_FILE}")
 
 # Configurazione del logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filename="video_comparison.log")
@@ -66,9 +103,9 @@ def compare_hashes(distance_threshold: int) -> None:
 
     # Salva i risultati in un file JSON
     try:
-        with open('similarities.json', 'w') as json_file:
+        with open(JSON_FILE, 'w') as json_file:
             json.dump(similarities, json_file, indent=4)
-        logging.info("File 'similarities.json' creato con successo.")
+        logging.info(f"File {JSON_FILE} creato con successo.")
     except Exception as e:
-        logging.error(f"Errore durante la scrittura del file similarities.json: {e}")
+        logging.error(f"Errore durante la scrittura del file {JSON_FILE}: {e}")
 
