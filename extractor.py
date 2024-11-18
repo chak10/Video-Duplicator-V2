@@ -196,8 +196,12 @@ def process_video(video_path: Path) -> None:
 def process_videos_in_directory(directory: str) -> None:
     """Processa tutti i video in una cartella e nelle sue sottocartelle usando multithreading.""" 
     video_extensions = (
-        '.mp4', '.avi', '.mov', '.mkv', '.wmv', 
-        '.flv', '.webm', '.mpeg', '.mpg', '.m4v', '.3gp'
+        ".3gp", ".avi", ".flv", ".h264", ".hevc", ".mkv", ".mov", ".mp4",
+        ".mpeg", ".mpg", ".mpeg4", ".mts", ".mxg", ".ogv", ".ts", ".vob",
+        ".webm", ".wmv", ".divx", ".xvid", ".m4v", ".rm", ".rmvb", ".svq3",
+        ".dvd", ".mxf", ".f4v", ".amv", ".roq", ".yuv", ".cine", ".bik", 
+        ".cpk", ".vdr", ".iso", ".iso9660", ".nsv", ".m2v", ".mp2", ".mpv",
+        ".mod", ".tod", ".pmp", ".ivf", ".drc", ".bmv", ".svi", ".flv", ".vp8"
     )
     
     if not Path(directory).exists():

@@ -25,7 +25,6 @@ except KeyError:
     raise KeyError("La configurazione 'DIR_TO_PROCESS' non è stata trovata nel file 'config.ini'.")
 
 # Calcola il nome del file del database usando un hash Blake2b a 128 bit, se non è definito nel file di configurazione
-# Calcola il nome del file del database usando un hash Blake2b a 128 bit, se non è definito nel file di configurazione
 DB_FILE = config['Database'].get('DB_FILE', None)
 JSON_FILE = "similarities.json"
 if not DB_FILE:
@@ -60,7 +59,7 @@ class VideoComparerApp(tk.Tk):
         
         self.title("Confronto Video")
         width = int(self.winfo_screenwidth())
-        height = int(self.winfo_screenheight()*0.94)
+        height = int(self.winfo_screenheight()*0.80)
         self.geometry(f"{width}x{height}+{0}+{0}")
         
         # Colore di sfondo scuro
@@ -104,8 +103,10 @@ class VideoComparerApp(tk.Tk):
         hamming_distance = similarity["hamming_distance"]
         
         # Mostra il nome dei video come titolo
-        video1_name = video1_info['video_path']  # Estrae il nome del file dal percorso
-        video2_name = video2_info['video_path']  # Estrae il nome del file dal percorso
+        n1 = Path(video1_info['video_path'])
+        video1_name =  n1.name  # Estrae il nome del file dal percorso
+        n2 = Path(video2_info['video_path'])
+        video2_name = n2.name  # Estrae il nome del file dal percorso
 
         # Frame per i video e le informazioni in due colonne
         self.display_video_column(video1_info, 0, video1_name)  # Passa il nome del video 1
@@ -133,7 +134,8 @@ class VideoComparerApp(tk.Tk):
         self.frames_data = []
         for frame_path in video_info["frame_paths"]:
             img_label = tk.Label(frames_frame, bg="#121212")
-            img_label.pack(pady=5)
+            #img_label.pack(pady=5)
+            img_label.pack(side="left", padx=5)  # Usa side="left" per disporre orizzontalmente
             self.frames_data.append((frame_path, img_label))
         
         # Carica e visualizza le immagini con dimensioni fisse
@@ -214,7 +216,7 @@ class VideoComparerApp(tk.Tk):
                     self.destroy()
                     return
 
-                messagebox.showinfo("Eliminazione", "Video eliminato con successo.")
+                #messagebox.showinfo("Eliminazione", "Video eliminato con successo.")
                 self.show_comparison()
             except Exception as e:
                 messagebox.showerror("Errore", f"Errore durante l'eliminazione: {e}")
