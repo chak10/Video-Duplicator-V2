@@ -1,7 +1,7 @@
-from extractor import process_videos_in_directory
-from database_manager import create_table
+from moduli.extractor import process_videos_in_directory
+from moduli.database_manager import create_table
 import logging
-from compare import compare_hashes
+from moduli.compare import compare_hashes
 import configparser
 from pathlib import Path
 

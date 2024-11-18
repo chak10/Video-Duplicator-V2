@@ -3,7 +3,7 @@ import os
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
-from database_manager import delete_video  # Presupponendo che ci sia una funzione per cancellare i video dal database
+from moduli.database_manager import delete_video  # Presupponendo che ci sia una funzione per cancellare i video dal database
 import hashlib
 import configparser
 from pathlib import Path
